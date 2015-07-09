@@ -7,7 +7,7 @@ I'm going to assume the following.
   * Familiar with docker-build
 
 First, fork this repository
-![osev3fork](images/osev3.jpg)
+![ldapfork](images/ldap-fork.jpg)
 
 You'll have a repo called something like `https://github.com/<username>/ose3-ldap-auth` Clone that on your master somewhere 
 ```
