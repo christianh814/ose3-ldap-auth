@@ -19,8 +19,12 @@ You'll have a repo called something like `https://github.com/<username>/ose3-lda
 Now inside the “ose3-ldap-auth” repo; create the keys needed for TLS communications.(Also, specify the signing cert as the OSE cert and copy that CA cert)
 ```
 [root@ose3-master ose3-ldap-auth]# oadm create-server-cert \
---cert='basicauthurl-cert.crt' --hostnames="basicauthurl.cloudapps.example.com" --key='basicauthurl-key.key' \
---signer-cert=/etc/openshift/master/ca.crt --signer-key=/etc/openshift/master/ca.key --signer-serial=/etc/openshift/master/ca.serial.txt
+--cert='basicauthurl-cert.crt' \ 
+--hostnames="basicauthurl.cloudapps.example.com" \
+--key='basicauthurl-key.key' \
+--signer-cert=/etc/openshift/master/ca.crt \
+--signer-key=/etc/openshift/master/ca.key \
+--signer-serial=/etc/openshift/master/ca.serial.txt
 [root@ose3-master ose3-ldap-auth]# pwd
 /usr/local/src/ose3-ldap-auth
 [root@ose3-master ose3-ldap-auth]# cp /etc/openshift/master/ca.crt .
