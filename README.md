@@ -12,11 +12,11 @@ First, fork this repository
 You'll have a repo called something like `https://github.com/<username>/ose3-ldap-auth` Clone that on your master somewhere 
 ```
 [root@ose3-master ~]# cd /usr/local/src/
-[root@ose3-master src]# git clone https://github.com/christianh814/ose3-ldap-auth
+[root@ose3-master src]# git clone https://github.com/<username>/ose3-ldap-auth
 [root@ose3-master src]# cd ose3-ldap-auth/
 ```
 
-Now inside the “ose3-ldap-auth” repo; create the keys needed for TLS communications.(Also, specify the signing cert as the OSE cert and copy that CA cert)
+Now inside the “ose3-ldap-auth” repo; create the keys needed for TLS communications.(Also, specify the signing cert as the OSE cert and copy that CA cert). Make note of your `--hostnames` entry as this will be the name of your app when you create it!
 ```
 [root@ose3-master ose3-ldap-auth]# oadm create-server-cert \
 --cert='basicauthurl-cert.crt' \ 
@@ -84,7 +84,7 @@ Edit the `auth.conf` file to reflect your server settings
 
 The things you want to look to edit in this file are…
 
-  * `ServerAlias` - This MUST match what you put for `--hostnames=`
+  * `ServerAlias` - This **MUST** match what you put for `--hostnames=` (paramount!)
   * `AuthLDAPURL` - This is where you provide the URI of the Directory Server
   * `AuthLDAPBindDN` - The user to bind as (if you're not doing anonymous bind)
   * `AuthLDAPBindPassword` - Password of the user
@@ -104,7 +104,7 @@ Now create a new project that will house the auth pod
 
 Create your application using the following parameters
 ```
-[root@ose3-master ose3-ldap-auth]# oc new-app https://github.com/christianh814/ose3-ldap-auth --strategy=docker --name=basicauthurl -n auth
+[root@ose3-master ose3-ldap-auth]# oc new-app https://github.com/<username>/ose3-ldap-auth --strategy=docker --name=basicauthurl -n auth
 ```
 
 Things to note
@@ -131,7 +131,7 @@ NAME           LABELS    SELECTOR                        IP(S)     PORT(S)
 basicauthurl   <none>    deploymentconfig=basicauthurl             443/TCP
 ```
 
-Now expose the route
+Now expose the route (the `--hostname` here **MUST** match the `--hostnames` from the `oadm` command above)
 ```
 [root@ose3-master ose3-ldap-auth]# oc expose service basicauthurl --hostname=basicauthurl.cloudapps.example.com -n auth
 NAME           HOST/PORT                            PATH      SERVICE        LABELS
@@ -192,3 +192,5 @@ Restart the openshift-master service
 ```
 [root@ose3-master ose3-ldap-auth]# systemctl restart openshift-master
 ```
+
+**__NOTE__** If you put a password you'll probably want to delete the repo you forked (unless you make it "private")
