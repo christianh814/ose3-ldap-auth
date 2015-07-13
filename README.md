@@ -12,9 +12,9 @@ First, fork this repository
 
 You'll have a repo called something like `https://github.com/<username>/ose3-ldap-auth` Clone that on your master somewhere 
 ```
-cd /usr/local/src/
-git clone https://github.com/<username>/ose3-ldap-auth
-cd ose3-ldap-auth/
+root@master# cd /usr/local/src/
+root@master# git clone https://github.com/<username>/ose3-ldap-auth
+root@master# cd ose3-ldap-auth/
 ```
 
 Now inside the “ose3-ldap-auth” repo; create the keys needed for TLS communications.(Also, specify the signing cert as the OSE cert and copy that CA cert). Make note of your `--hostnames` entry as this will be the name of your app when you create it!
