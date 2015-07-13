@@ -5,30 +5,34 @@ I'm going to assume the following.
   * You are an OSEv3 admin
   * You have a github/gitlab account (comeon they're free!)
   * Familiar with docker-build
+  * All steps are being performed on the master
 
 First, fork this repository
 ![ldapfork](images/ldap-fork.jpg)
 
 You'll have a repo called something like `https://github.com/<username>/ose3-ldap-auth` Clone that on your master somewhere 
 ```
-[root@ose3-master ~]# cd /usr/local/src/
-[root@ose3-master src]# git clone https://github.com/<username>/ose3-ldap-auth
-[root@ose3-master src]# cd ose3-ldap-auth/
+cd /usr/local/src/
+git clone https://github.com/<username>/ose3-ldap-auth
+cd ose3-ldap-auth/
 ```
 
 Now inside the “ose3-ldap-auth” repo; create the keys needed for TLS communications.(Also, specify the signing cert as the OSE cert and copy that CA cert). Make note of your `--hostnames` entry as this will be the name of your app when you create it!
 ```
-[root@ose3-master ose3-ldap-auth]# oadm create-server-cert \
+root@master# cd /usr/local/src/ose3-ldap-auth
+
+root@master# oadm create-server-cert \
 --cert='basicauthurl-cert.crt' \ 
 --hostnames="basicauthurl.cloudapps.example.com" \
 --key='basicauthurl-key.key' \
 --signer-cert=/etc/openshift/master/ca.crt \
 --signer-key=/etc/openshift/master/ca.key \
 --signer-serial=/etc/openshift/master/ca.serial.txt
-[root@ose3-master ose3-ldap-auth]# pwd
-/usr/local/src/ose3-ldap-auth
-[root@ose3-master ose3-ldap-auth]# cp /etc/openshift/master/ca.crt .
-[root@ose3-master ose3-ldap-auth]# ll
+
+
+root@master# cp /etc/openshift/master/ca.crt /usr/local/src/ose3-ldap-auth
+
+root@master# ll
 total 28
 -rw-r--r--. 1 root root 1175 Jul  9 11:56 auth.conf
 -rw-r--r--. 1 root root 2230 Jul  9 12:01 basicauthurl-cert.crt
@@ -92,19 +96,20 @@ The things you want to look to edit in this file are…
 
 Once you made these edits; add it to your forked repo 
 ```
-[root@ose3-master ose3-ldap-auth]# git add -A .
-[root@ose3-master ose3-ldap-auth]# git commit -am "Added auth parameters"
-[root@ose3-master ose3-ldap-auth]# git push
+root@master# cd /usr/local/src/ose3-ldap-auth
+root@master# git add -A .
+root@master# git commit -am "Added auth parameters"
+root@master# git push
 ```
 
 Now create a new project that will house the auth pod
 ```
-[root@ose3-master ose3-ldap-auth]# oadm new-project auth --display-name="Authentican Space" --description="This is to show how Authentication works on OpenShift v3" --node-selector='region=infra'
+root@master# oadm new-project auth --display-name="Authentican Space" --description="This is to show how Authentication works on OpenShift v3" --node-selector='region=infra'
 ```
 
 Create your application using the following parameters
 ```
-[root@ose3-master ose3-ldap-auth]# oc new-app https://github.com/<username>/ose3-ldap-auth --strategy=docker --name=basicauthurl -n auth
+root@master# oc new-app https://github.com/<username>/ose3-ldap-auth --strategy=docker --name=basicauthurl -n auth
 ```
 
 Things to note
@@ -114,38 +119,38 @@ Things to note
 
 Wait a few moments and you should see a build running
 ```
-[root@ose3-master ose3-ldap-auth]# oc get builds -n auth
+root@master# oc get builds -n auth
 NAME             TYPE      STATUS    POD
 basicauthurl-1   Docker    Running   basicauthurl-1-build
 ```
 
 View the logs if you'd like
 ```
-[root@ose3-master ose3-ldap-auth]# oc build-logs basicauthurl-1 -n auth
+root@master# oc build-logs basicauthurl-1 -n auth
 ```
 
 You will need to tell the service which port to listen on
 ```
-[root@ose3-master ose3-ldap-auth]# oc expose dc/basicauthurl --port=443 --generator=service/v1 -n auth
+root@master# oc expose dc/basicauthurl --port=443 --generator=service/v1 -n auth
 NAME           LABELS    SELECTOR                        IP(S)     PORT(S)
 basicauthurl   <none>    deploymentconfig=basicauthurl             443/TCP
 ```
 
 Now expose the route (the `--hostname` here **MUST** match the `--hostnames` from the `oadm` command above)
 ```
-[root@ose3-master ose3-ldap-auth]# oc expose service basicauthurl --hostname=basicauthurl.cloudapps.example.com -n auth
+root@master# oc expose service basicauthurl --hostname=basicauthurl.cloudapps.example.com -n auth
 NAME           HOST/PORT                            PATH      SERVICE        LABELS
 basicauthurl   basicauthurl.cloudapps.example.com             basicauthurl 
 ```
 
 Since we are hosting SSL within our application...we need to tell the routing layer to use `passthough` TLS. Edit the route to have `tls: terminiation: passthrough`
 ```
-[root@ose3-master ose3-ldap-auth]# oc edit route/basicauthurl -n auth -o yaml
+root@master# oc edit route/basicauthurl -n auth -o yaml
 ```
 
 In the end,it should look something like this
 ```
-[root@ose3-master ose3-ldap-auth]# oc get route/basicauthurl -n auth -o yaml 
+root@master# oc get route/basicauthurl -n auth -o yaml 
 apiVersion: v1
 kind: Route
 metadata:
@@ -169,7 +174,7 @@ status: {}
 
 Test your application using curl and the CA cert.
 ```
-[root@ose3-master ose3-ldap-auth]# curl --cacert /etc/openshift/master/ca.crt -u ldapuser:password123 https://basicauthurl.cloudapps.example.com/id.php
+root@master# curl --cacert /etc/openshift/master/ca.crt -u ldapuser:password123 https://basicauthurl.cloudapps.example.com/id.php
 {"sub":"ldapuser"}
 ```
 
@@ -190,7 +195,7 @@ Now edit the `/etc/openshift/master/master-config.yaml` file (make a backup firs
 
 Restart the openshift-master service
 ```
-[root@ose3-master ose3-ldap-auth]# systemctl restart openshift-master
+root@master# systemctl restart openshift-master
 ```
 
 **__NOTE__** If you put a password you'll probably want to delete the repo you forked (unless you make it "private")
