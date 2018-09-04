@@ -3,7 +3,7 @@
 I'm going to assume the following.
 
   * You are an OSEv3 admin
-  * You have a github/gitlab account (comeon they're free!)
+  * You have a github/gitlab account
   * Familiar with docker-build
   * All steps are being performed on the master
 
